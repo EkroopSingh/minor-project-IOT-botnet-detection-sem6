@@ -1,3 +1,20 @@
 Databse From Kaggle Size 2GB 
 Databse Name : N-BaIOT
 hello
+
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("mkashifn/nbaiot-dataset")
+
+print("Path to dataset files:", path)
+
+notes for joben 
+1. pip3 install pandas numpy matplotlib scikit-learn joblib
+2.  python train.py
+3. python3 -m venv venv
+pip3 install seaborn
+pip3 freeze > requirements.txt
+pip3 install streamlit
+streamlit run app.py
