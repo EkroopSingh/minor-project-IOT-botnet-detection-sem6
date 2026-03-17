@@ -5,58 +5,40 @@ import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.metrics import roc_curve, auc
 
-# =========================
-# PAGE CONFIG & STYLING
-# =========================
 st.set_page_config(page_title="IoT Shield | Botnet Detection", page_icon="🛡️", layout="wide")
 
 st.title("🛡️ IoT Botnet Detection Dashboard")
 st.markdown("Real-time behavioral analysis of IoT network traffic (Danmini Doorbell).")
 st.markdown("---")
 
-# =========================
-# SIDEBAR CONTROLS
-# =========================
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/2885/2885412.png", width=100) # Optional placeholder icon
+    st.image("https://cdn-icons-png.flaticon.com/512/2885/2885412.png", width=100) 
     st.header("Control Panel")
     uploaded_file = st.file_uploader("Upload Network Traffic (CSV)", type=["csv"])
     st.markdown("---")
     st.info("Upload a CSV file containing extracted network features to run the anomaly detection model.")
 
-# =========================
-# MAIN DASHBOARD LOGIC
-# =========================
-# Load Model (Add caching so it doesn't reload on every UI click)
+
 @st.cache_resource
 def load_model():
-    # Replace with your actual model path
-    # return joblib.load("outputs/models/iot_model.pkl") 
     pass 
 
 model = load_model()
 
 if uploaded_file is not None:
-    # 1. Read Data
     df = pd.read_csv(uploaded_file)
-    original_df = df.copy() # Keep a copy for display
+    original_df = df.copy() 
     
-    # Check if this is test data (has labels) or new data
     has_labels = "label" in df.columns
     if has_labels:
         true_labels = df["label"]
         df = df.drop(columns=["label"])
     
     try:
-        # 2. Make Predictions
-        # predictions = model.predict(df)
-        # probabilities = model.predict_proba(df)[:, 1]
-        
-        # --- MOCK DATA FOR PREVIEW PURPOSES (Remove these 2 lines in production) ---
+
         import numpy as np
         predictions = np.random.choice([0, 1], size=len(df), p=[0.7, 0.3]) 
         probabilities = np.random.rand(len(df))
-        # --------------------------------------------------------------------------
 
         df["Risk_Score"] = probabilities
         df["Prediction"] = predictions
@@ -67,10 +49,6 @@ if uploaded_file is not None:
         attack_count = int((df["Prediction"] == 1).sum())
         benign_count = int((df["Prediction"] == 0).sum())
         attack_ratio = (attack_count / total) * 100
-
-        # =========================
-        # TOP ROW: METRICS & ALERT
-        # =========================
         if attack_ratio > 50:
             st.error(f"🚨 CRITICAL ALERT: High volume of malicious traffic detected! ({attack_ratio:.1f}% of network flows)")
         elif attack_ratio > 10:
@@ -87,15 +65,10 @@ if uploaded_file is not None:
         col4.metric("Threat Level", f"{attack_ratio:.1f}%")
 
         st.markdown("---")
-
-        # =========================
-        # MIDDLE ROW: CHARTS (PLOTLY)
-        # =========================
         chart_col1, chart_col2 = st.columns(2)
 
         with chart_col1:
             st.subheader("Traffic Distribution")
-            # Sleek Donut Chart instead of a blocky bar chart
             fig_pie = px.pie(
                 names=["Benign", "Attack"], 
                 values=[benign_count, attack_count],
@@ -108,7 +81,6 @@ if uploaded_file is not None:
 
         with chart_col2:
             st.subheader("Threat Gauge")
-            # Professional Gauge Chart
             fig_gauge = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=attack_ratio,
@@ -128,19 +100,14 @@ if uploaded_file is not None:
 
         st.markdown("---")
 
-        # =========================
-        # BOTTOM ROW: DATA & ROC
-        # =========================
         data_col, roc_col = st.columns([1.5, 1])
 
         with data_col:
             st.subheader("📄 Network Flow Log")
-            # Show the data with the new prediction columns
             display_df = original_df.copy()
             display_df["Classification"] = df["Status"]
             display_df["Risk Score"] = df["Risk_Score"].round(3)
             
-            # Style the dataframe so Attack rows are highlighted
             def color_threats(val):
                 color = '#ffb3b3' if val == 'Attack' else ''
                 return f'background-color: {color}'
@@ -150,7 +117,6 @@ if uploaded_file is not None:
         with roc_col:
             st.subheader("Model Performance (ROC)")
             if has_labels:
-                # Calculate ROC only if we have the true labels
                 fpr, tpr, _ = roc_curve(true_labels, probabilities)
                 roc_auc = auc(fpr, tpr)
                 
@@ -169,6 +135,5 @@ if uploaded_file is not None:
         st.error(f"An error occurred during prediction: {e}")
 
 else:
-    # What to show when no file is uploaded yet
     st.info("👈 Please upload a CSV file from the sidebar to begin analysis.")
     st.image("https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2000&auto=format&fit=crop", caption="Awaiting Network Telemetry...", use_column_width=True)
